@@ -4,6 +4,7 @@ from utils import connect_to_database
 class Spot:
     def __init__(
         self,
+        uid: str,
         owner: str,
         lng: float,
         lat: float,
@@ -15,6 +16,7 @@ class Spot:
         contact_number: str,
         created_at: int,
     ):  # ugly code, sad face
+        self._uid = uid
         self.lng = lng
         self.lat = lat
         self.location_description = location_description
@@ -30,18 +32,18 @@ class Spot:
         self.arrived = new_value
         with connect_to_database() as connection:
             connection.cursor().execute(
-                'UPDATE spots SET arrived = %s WHERE _owner = %s;', (new_value, self.owner))
+                'UPDATE spots SET arrived = %s WHERE _uid = %s;', (new_value, self._uid))
 
     def set_arriving(self, new_value):
         self.arriving = new_value
         with connect_to_database() as connection:
             connection.cursor().execute(
-                'UPDATE spots SET arriving = %s WHERE _owner = %s;', (new_value, self.owner))
+                'UPDATE spots SET arriving = %s WHERE _uid = %s;', (new_value, self._uid))
 
     def calculate_availiability(self):
         if self.arrived >= self.capacity:
             return 2
-        if self.arrived + self.arrving >= self.capacity and self.arrived < self.capacity:
+        if self.arrived + self.arriving >= self.capacity and self.arrived < self.capacity:
             return 1
         return 0
 
@@ -52,15 +54,17 @@ class Spot:
                 'lat': self.lat
             },
             'capacity': self.capacity,
-            'availiability': self.calculate_availiability()
+            'availiability': self.calculate_availiability(),
+            'uid': self._uid
         }
 
     def _insert(self):
         with connect_to_database() as connection:
             cursor = connection.cursor()
             cursor.execute('''
-            INSERT INTO spots VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);
+            INSERT INTO spots VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);
             ''', (
+                self._uid,
                 self.owner,
                 self.lng,
                 self.lat,
@@ -76,13 +80,13 @@ class Spot:
     @staticmethod
     def delete(cls, uid):
         with connect_to_database() as connection:
-            connection.cursor().execute('DELETE * FROM spots WHERE _owner = %s', (uid,))
+            connection.cursor().execute('DELETE * FROM spots WHERE _uid = %s', (uid,))
 
     @classmethod
     def load(cls, uid):
         with connect_to_database() as connection:
             cursor = connection.cursor()
-            cursor.execute('SELECT * FROM spots WHERE _owner = %s', (uid,))
+            cursor.execute('SELECT * FROM spots WHERE _uid = %s', (uid,))
             result = cursor.fetchone()
             cursor.close()
             if result is None:
@@ -99,4 +103,5 @@ class Spot:
                 result[7],
                 result[8],
                 result[9],
+                result[10]
             )

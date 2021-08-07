@@ -3,6 +3,7 @@ from functools import wraps
 
 from flask import request, redirect
 import psycopg2
+from geopy.distance import geodesic
 
 from config import DatabaseConfig
 
@@ -15,25 +16,16 @@ def login_required(func):
         return func(token, *args, **kwargs)
     return wrapper
 
-
-def distance_between(point1, point2) -> int:
+RADIUS = 6378137
+def distance_between(point1, point2) -> float:
+    global RADIUS
     '''
     point1, tuple: (lng, lat);
     point2, tuple: (lng, lat);
     gets the distance between in meters.
     '''
-    lng1 = math.radians(point1[0])
-    lng2 = math.radians(point1[0])
-    lat1 = math.radians(point1[0])
-    lat2 = math.radians(point1[0])
-    lat_dist = lat1 - lat2
-    lng_dist = lng1 - lng2
-    s = 2 * math.asin(
-        math.sqrt(
-            math.sin(lat_dist/2)**2 + math.cos(lat1) *
-            math.cos(lat2) * math.sin(lng_dist/2)**2
-        )
-    )
+    
+    return geodesic(reversed(point1), reversed(point2)).meters
 
 class _DatabaseConnection:
 

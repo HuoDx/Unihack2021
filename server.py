@@ -1,9 +1,12 @@
-from flask import Flask, request, render_template
+from spots.test_data_generator import generate
+from flask import Flask, request, render_template, jsonify
 from flask.helpers import make_response
 from werkzeug.utils import redirect
 
 from config import DEBUG, AK
 from utils import login_required
+from spots import spot_manager
+
 server = Flask(__name__)
 
 if DEBUG:
@@ -17,9 +20,13 @@ def index(token):
     return render_template('index.html', access_key = AK)
 
 @server.route('/api/nearby-spots', methods=['GET'])
-def get_nearby_spots():
+def nearby_spots():
     lng: float = request.args.get('lng', type=float)
     lat: float = request.args.get('lat', type=float)
+    result = []
+    for spot in spot_manager.get_nearby_spots((lng, lat)):
+        result.append(spot.brief())
+    return jsonify(result)
 
 @server.route('/login', methods = ['GET', 'POST'])
 def login():
