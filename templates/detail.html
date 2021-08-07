@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>活点地图</title>
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="Description" content="活点地图 - 实时显示附近的资源">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css" />
+    <script type="text/javascript" src="https://api.map.baidu.com/api?type=webgl&v=1.0&ak={{access_key}}"></script>
+    <script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&ak={{access_key}}"></script>
+</head>
+
+<body>
+    <div class="mdui-container mdui-typo">
+        <div style="display: flex; flex-direction: row; align-items: center; margin-top: 24px;">
+            <img src="{{spot.logo}}" width="64px" height="64px" />
+            <div class="mdui-typo-headline">{{spot.title}}</div>
+        </div>
+        <div class="mdui-panel" mdui-panel>
+
+            <div class="mdui-panel-item mdui-panel-item-open">
+                <div class="mdui-panel-item-header">基本信息</div>
+                <div class="mdui-panel-item-body">
+                    <ul class="mdui-list">
+                        <li class="mdui-list-item mdui-ripple">
+                            <i class="mdui-list-item-icon mdui-icon material-icons">my_location</i>
+                            <div class="mdui-list-item-content" id="location-description">{{spot.location_description}}</div>
+                        </li>
+                        <li class="mdui-list-item mdui-ripple">
+                            <i class="mdui-list-item-icon mdui-icon material-icons">date_range</i>
+                            <div class="mdui-list-item-content" id="date"></div>
+                        </li>
+                        <li class="mdui-list-item mdui-ripple">
+                            <i class="mdui-list-item-icon mdui-icon material-icons">gesture</i>
+                            <div class="mdui-list-item-content" id="travel-info">正在计算路径, 请稍等.</div>
+                        </li>
+                        <li class="mdui-list-item mdui-ripple">
+                            <i class="mdui-list-item-icon mdui-icon material-icons">people</i>
+                            <div class="mdui-list-item-content">可容纳 {{spot.capacity}} 人</div>
+                        </li>
+                        <li class="mdui-list-item mdui-ripple">
+                            <i class="mdui-list-item-icon mdui-icon material-icons">edit</i>
+                            <div class="mdui-list-item-content">还有 {{spot.capacity - spot.registered}} 个位置可以预约</div>
+                        </li>
+                        <li class="mdui-list-item mdui-ripple">
+                            <i class="mdui-list-item-icon mdui-icon material-icons">contact_phone</i>
+                            <div class="mdui-list-item-content">需要帮助请致电 {{spot.contact_number}} </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mdui-panel-item">
+                <div class="mdui-panel-item-header">描述</div>
+                <div class="mdui-panel-item-body">
+                    <p>{{spot.description}}</p>
+                </div>
+            </div>
+            <div class="mdui-panel-item">
+                <div class="mdui-panel-item-header">路线</div>
+                <div class="mdui-panel-item-body">
+                    <div id="route"></div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <div style="display: none;" id="container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
+        integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
+        crossorigin="anonymous"></script>
+    <script>
+        var route = []
+        var $ = (selector) => document.querySelector(selector)
+        var timestamp = parseInt('{{spot.created_at}}')
+        console.log(timestamp)
+        var date = Date(timestamp)
+        $('#date').innerText = date
+        var geolocation = new BMap.Geolocation();
+
+        async function locate() {
+            return new Promise((resolve, reject) => {
+                geolocation.getCurrentPosition(
+                    function (r) {
+                        if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+                            console.log('您的位置：' + r.point.lng + ',' + r.point.lat);
+                            resolve(r)
+                        }
+                        else {
+                            let errorMessage = this.getStatus()
+                            console.error('failed' + errorMessage)
+                            reject(errorMessage)
+                        }
+                    }
+                )
+            })
+        }
+        (async () => {
+            var map = new BMap.Map('container')
+            let location = await locate()
+            map.centerAndZoom(location.point, 20);
+            var walking = new BMap.WalkingRoute(map, {
+                renderOptions: { autoViewport: false },
+                onSearchComplete: function (results) {
+                    console.log('Done.')
+                    if (walking.getStatus() != BMAP_STATUS_SUCCESS) {
+                        console.error(walking.getStatus())
+                        return;
+                    }
+                    var plan = results.getPlan(0);
+                    console.log(plan)
+                    var output = ''
+
+                    output += `共${plan.getDistance(true)}, `;  //获取距离
+                    output += `预计需要 ${plan.getDuration(true)} 抵达`;  //获取时间
+                    $('#travel-info').innerText = output
+                    console.log(output)
+                    for (let point of plan.Wh[0].Tr) {
+                        let sign = point.Wg.match('左') !== null ? 'arrow_back' : (point.Wg.match('右') !== null ? 'arrow_forward' : 'arrow_upward')
+                        $('#route').innerHTML += `<p><i class="mdui-list-item-icon mdui-icon material-icons">${sign}</i> ${point.Wg}</p>`;
+                    }
+
+                }
+            });
+
+            
+
+            lat = parseFloat('{{ spot.lat }}')
+            lng = parseFloat('{{ spot.lng }}')
+            walking.search(location.point, new BMap.Point(lng, lat))
+            var myGeo = new BMap.Geocoder({ extensions_town: true });
+            // 根据坐标得到地址描述    
+            myGeo.getLocation(new BMap.Point(lng, lat), function (result) {
+                if (result) {
+                    $('#location-description').innerText = `${result.address}\n${$('#location-description').innerText}`
+                }
+            })
+        })()
+    </script>
+</body>

@@ -6,17 +6,22 @@ with connect_to_database() as connection:
     cursor = connection.cursor()
     cursor.execute('SELECT _uid FROM spots;')
     uids = cursor.fetchall()
-    cursor.close()
     print('Loadded %d spots.'%len(uids))
     for uid in uids:
         spots.append(Spot.load(uid))
+    cursor.close()
     
-
+def get_spot(uid):
+    global spots
+    for spot in spots:
+        if spot._uid == uid:
+            return spot
+            
 def get_nearby_spots(point: tuple[float, float]) -> list:
     global spots
     filtered: list[Spot] = []
     for spot in spots:
-        if distance_between((spot.lng, spot.lat), point) < 1000:
+        if distance_between((spot.lng, spot.lat), point) < 1000 and spot.capacity - spot.registered > 2:
             filtered.append(spot)
     return filtered
 

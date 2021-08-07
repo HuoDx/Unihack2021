@@ -19,6 +19,9 @@ if DEBUG:
 def index(token):
     return render_template('index.html', access_key = AK)
 
+@server.route('/spots/<uid>', methods=['GET', 'POST'])
+def detail(uid):
+    return render_template('detail.html', spot = spot_manager.get_spot(uid), access_key = AK)
 @server.route('/api/nearby-spots', methods=['GET'])
 def nearby_spots():
     lng: float = request.args.get('lng', type=float)

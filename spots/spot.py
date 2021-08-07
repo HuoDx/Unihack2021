@@ -10,8 +10,9 @@ class Spot:
         lat: float,
         location_description: str,
         capacity: int,
-        arrived: int,
-        arriving: int,
+        registered: int,
+        title: int,
+        logo: str,
         description: str,
         contact_number: str,
         created_at: int,
@@ -22,30 +23,24 @@ class Spot:
         self.location_description = location_description
         self.owner = owner
         self.capacity = capacity
-        self.arrived = arrived
-        self.arriving = arriving
+        self.registered = registered
+        self.title = title
+        self.logo = logo
         self.description = description
         self.contact_number = contact_number
         self.created_at = created_at
 
-    def set_arrived(self, new_value):
-        self.arrived = new_value
+    def set_registered(self, new_value):
+        self.registered = new_value
         with connect_to_database() as connection:
             connection.cursor().execute(
-                'UPDATE spots SET arrived = %s WHERE _uid = %s;', (new_value, self._uid))
+                'UPDATE spots SET registered = %s WHERE _uid = %s;', (new_value, self._uid))
 
     def set_arriving(self, new_value):
         self.arriving = new_value
         with connect_to_database() as connection:
             connection.cursor().execute(
                 'UPDATE spots SET arriving = %s WHERE _uid = %s;', (new_value, self._uid))
-
-    def calculate_availiability(self):
-        if self.arrived >= self.capacity:
-            return 2
-        if self.arrived + self.arriving >= self.capacity and self.arrived < self.capacity:
-            return 1
-        return 0
 
     def brief(self) -> dict:
         return {
@@ -54,15 +49,18 @@ class Spot:
                 'lat': self.lat
             },
             'capacity': self.capacity,
-            'availiability': self.calculate_availiability(),
-            'uid': self._uid
+            'availiability': self.capacity - self.registered,
+            'description': self.description,
+            'uid': self._uid,
+            'logo': self.logo,
+            'title': self.title
         }
 
     def _insert(self):
         with connect_to_database() as connection:
             cursor = connection.cursor()
             cursor.execute('''
-            INSERT INTO spots VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);
+            INSERT INTO spots VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);
             ''', (
                 self._uid,
                 self.owner,
@@ -70,8 +68,9 @@ class Spot:
                 self.lat,
                 self.location_description,
                 self.capacity,
-                self.arrived,
-                self.arriving,
+                self.registered,
+                self.title,
+                self.logo,
                 self.description,
                 self.contact_number,
                 self.created_at,
@@ -103,5 +102,6 @@ class Spot:
                 result[7],
                 result[8],
                 result[9],
-                result[10]
+                result[10],
+                result[11]
             )

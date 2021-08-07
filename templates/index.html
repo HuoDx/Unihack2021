@@ -33,20 +33,18 @@
 </head>
 
 <body>
+    <div class="mdui-toolbar" style="z-index: 1024;">
+        <a href="javascript:;" class="mdui-typo-title">活点地图</a>
+        <div class="mdui-toolbar-spacer"></div>
+        <a href="javascript:location.reload();" class="mdui-btn mdui-btn-icon mdui-ripple"><i class="mdui-icon material-icons">refresh</i></a>
+        <a href="/create-spot" class="mdui-btn mdui-btn-icon mdui-ripple"><i class="mdui-icon material-icons">add</i></a>
+      </div>
     <div id="map-view"></div>
-    <div id="info-window-box" style="display: none;">
-        
-    </div>
+
     <script>
-        var availiabilityMap = [
-            '您可以前往这里.',
-            '有一些人正在路上, 等您到达时也许已经满员',
-            '这里已经人满为患'
-        ]
         var htmlTemplate = `<div class="mdui-container mdui-typo">
-            <h3 class="mdui-typo-headline">这里可以容纳%capacity%人</h3>
-            <div class="mdui-typo-subheading">%availiability%</div>
-            <div id="path-results">正在计算路径, 请稍等.</div>
+            <h3 class="mdui-typo-headline">还可以容纳%availiability%人</h3>
+            <div class="mdui-typo-subheading" id="path-results">正在计算路径, 请稍等.</div>
             <a href='/spots/%uid%' class="mdui-btn mdui-btn-raised" style="background-color: rgb(0, 0, 0); color: white;" >点击查看详情</button>
         </div>`
         var $ = (selector) => document.querySelector(selector)
@@ -68,6 +66,7 @@
                 )
             })
         }
+
         var toPointData = {};
         (async () => {
             var map = new BMap.Map('map-view');
@@ -76,12 +75,13 @@
             map.enableScrollWheelZoom(true);
             map.centerAndZoom(location.point, 20);
             var mk = new BMap.Marker(location.point);
-            
+
 
             map.addOverlay(mk);
             mk.addEventListener("click", function () {
                 map.openInfoWindow(infoWindow, location.point);
             });
+
 
             var walking = new BMap.WalkingRoute(map, {
                 renderOptions: { autoViewport: false },
@@ -93,7 +93,7 @@
                     var plan = results.getPlan(0);
                     console.log(plan)
                     var output = ''
-                    
+
                     output += `共${plan.getDistance(true)}, `;  //获取距离
                     output += `预计需要 ${plan.getDuration(true)} 抵达`;  //获取时间
                     console.log(output)
@@ -105,7 +105,6 @@
                     $('#path-results').innerText = output
                 }
             });
-
             // var end = new BMap.Point(location.point.lng+0.008, location.point.lat+0.005);
 
             // walking.search(location.point, end); // 算路
@@ -124,32 +123,41 @@
             var data = await result.json()
             console.log(data)
             var opts = {
-                width: 380,     // 信息窗口宽度
-                height: 190,    // 信息窗口高度
-                title: "详细信息"  // 信息窗口标题
+                width: 300,     // 信息窗口宽度
+                height: 200,    // 信息窗口高度
+                title: "场地信息"  // 信息窗口标题
             }
+
             for (obj of data) {
                 console.log(obj)
-                let m = new BMap.Circle(new BMap.Point(obj.location.lng, obj.location.lat), obj.capacity/20, {
-                    fillColor: 'green',
-                    strokeWidth: 1,
-                    strokeOpacity: 1,
-                    strokeColor: 'black',
-                });
+                var shelterIcon = new BMap.Icon(obj.logo,
+                    new BMap.Size(64, 64), {
+                    anchor: new BMap.Size(24, 24),
+                })
+                let m = new BMap.Marker(new BMap.Point(obj.location.lng, obj.location.lat), { icon: shelterIcon });
                 m.infoWindow = new BMap.InfoWindow(
-                        htmlTemplate
-                        .replace('%capacity%', obj.capacity)
-                        .replace('%availiability%', availiabilityMap[0])
+                    htmlTemplate
+                        .replace('%availiability%', obj.availiability)
                         .replace('%uid%', obj.uid)
-                        , opts
-                        )
+                    , opts
+                )
                 m.addEventListener('click', function (e) {
-                    map.openInfoWindow(m.infoWindow, this.point
-                    )
+                    map.openInfoWindow(m.infoWindow, this.point)
                     $('#path-results').innerText = '正在计算路径, 请稍等.'
                     walking.search(location.point, this.point);
                 })
+                var label = new BMap.Label(obj.title, {       // 创建文本标注
+                    position: new BMap.Point(obj.location.lng, obj.location.lat),                          // 设置标注的地理位置
+                    offset: new BMap.Size(- obj.title.length * 6, 24)           // 设置标注的偏移量
+                })
+                label.setStyle({                              // 设置label的样式
+                    color: '#000',
+                    border: 'none',
+                    justifySelf: 'center'
+                })
+                map.addOverlay(label)
                 map.addOverlay(m)
+
             }
 
         })()
