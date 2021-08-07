@@ -50,6 +50,7 @@ Use a coordinate* to locate nearby Spots**.
 ##### `SpotBriefInfo` Object:
 -   spot_uid, string: the UID for this spot. Users can subscribe to the spot via `socket.io` for real-time updates.
 -   capcacity, int: how many people a spot can hold. Represented in symbol C in formulas.
+-   location, object {lng, lat}: location
 -   availability, int: 
     This is computed at the backend by using `peopleArrived`(P), `peopleArriving`(G), and an algorithm will tell if you can expect room.
     - 0 (P + G < C): you can go to this spot.
