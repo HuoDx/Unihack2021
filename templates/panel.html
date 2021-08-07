@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>活点地图</title>
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="Description" content="活点地图 - 实时显示附近的资源">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css" />
+</head>
+
+<body>
+    <div class="mdui-container mdui-typo">
+        <h1 class="mdui-typo-display2">已经预约的人</h1>
+        <ul class="mdui-list">
+            {% for row in data %}
+            <li class="mdui-list-item"><span>{{row['name']}}</span><div class="mdui-toolbar-spacer"></div><a href="tel:{{row['contact']}}">{{row['contact']}}</a></li>
+            {% endfor %}
+          </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
+        integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
+        crossorigin="anonymous"></script>
+    <script>
+        var $ = (selector) => document.querySelector(selector)
+    </script>
+</body>

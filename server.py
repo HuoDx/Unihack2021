@@ -44,7 +44,29 @@ def cancel_reservation():
         return resp
     return redirect('/')
 
+@server.route('/arrive')
+def arrive():
+    r = request.cookies.get('reserved')
+    if r is not None:
+        spot = spot_manager.get_spot(r)
+        resp = make_response(render_template('arrived.html'))
+        resp.set_cookie('reserved', '')
+        return resp
+    return redirect('/')
 
+@server.route('/panel/<spot_uid>')
+@login_required
+def panel(token, spot_uid):
+    if spot_manager.get_spot(spot_uid).owner != session_manager.get_uid(token):
+        return redirect('/')
+    data = []
+    with connect_to_database() as connection:
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM reservations WHERE spot_uid=%s',(spot_uid,))
+        results = cursor.fetchall()
+        for result in results:
+            data.append({'name': result[0], 'contact': result[1]})
+    return render_template('panel.html', data = data)
 
 @server.route('/editor', methods=['GET', 'POST'])
 @login_required
@@ -89,6 +111,13 @@ def detail(uid):
         name = request.form.get('name', '群众')
         phone = request.form.get('contact', '无信息')
         # TODO: do something
+        with connect_to_database() as connection:
+            cursor = connection.cursor()
+            cursor.execute('INSERT INTO reservations VALUES(%s,%s,%s);',(
+                name,
+                phone,
+                uid
+            ))
         spot = spot_manager.get_spot(uid)
         spot.set_registered(spot.registered + 1)
         response = make_response(render_template(

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>活点地图</title>
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="Description" content="活点地图 - 实时显示附近的资源">
+    <style>
+        .image {
+            background-image: url('/static/lighthouse.png');
+            background-size: cover;
+            border-radius: 50%;
+            width: 256px;
+            height: 256px;
+        }
+
+        .container {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            margin-top: 36px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css" />
+</head>
+
+<body>
+    <div class="mdui-container mdui-typo container">
+        <div class="image"></div>
+        <h1 class="mdui-typo-display2">恭喜你找到了需要的帮助!</h1>
+        <div class="mdui-typo-headline">我很开心这个平台帮到了你</div>
+        <div class="mdui-typo-subheadline">请不要忘记在这里带来温暖的陌生人</div>
+        <div class="mdui-typo-body1">有缘再会!</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
+        integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
+        crossorigin="anonymous"></script>
+</body>
