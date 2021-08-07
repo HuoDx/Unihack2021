@@ -1,3 +1,4 @@
+from flask.wrappers import Response
 from spots.test_data_generator import generate
 from flask import Flask, request, render_template, jsonify
 from flask.helpers import make_response
@@ -14,14 +15,55 @@ if DEBUG:
     from flask_cors import CORS
     CORS(server)
 
+
 @server.route('/')
+def index():
+    r = request.cookies.get('reserved')
+    if r is not None and spot_manager.get_spot(r) is not None:
+        return redirect('/spots/%s' % r)
+    resp = make_response(render_template('index.html', access_key=AK))
+    resp.set_cookie('reserved', '')
+    return resp
+
+
+@server.route('/cancel-reservation')
+def cancel_reservation():
+    r = request.cookies.get('reserved')
+    if r is not None:
+        resp = make_response(redirect('/'))
+        resp.set_cookie('reserved', '')
+        return resp
+    return redirect('/')
+
+
+@server.route('/editor', methods=['GET', 'POST'])
 @login_required
-def index(token):
-    return render_template('index.html', access_key = AK)
+def editor(token):
+    if request.method == 'GET':
+        return render_template('editor.html', access_key=AK)
+    else:
+        for k, v in request.form.items():
+            print('%s -> %s' % (k, v))
+        return render_template('editor.html', access_key=AK)
+
 
 @server.route('/spots/<uid>', methods=['GET', 'POST'])
 def detail(uid):
-    return render_template('detail.html', spot = spot_manager.get_spot(uid), access_key = AK)
+    r = request.cookies.get('reserved')
+    if request.method == 'GET':
+        return render_template('detail.html', spot=spot_manager.get_spot(uid), access_key=AK, reserved=(r != ''))
+    else:
+        name = request.form.get('name', '群众')
+        phone = request.form.get('contact', '无信息')
+        # TODO: do something
+        spot = spot_manager.get_spot(uid)
+        spot.set_registered(spot.registered + 1)
+        response = make_response(render_template(
+            'detail.html', spot=spot_manager.get_spot(uid), access_key=AK, reserved=True))
+        response.set_cookie('reserved', uid, max_age=3600*24*3)
+        return response
+
+
 @server.route('/api/nearby-spots', methods=['GET'])
 def nearby_spots():
     lng: float = request.args.get('lng', type=float)
@@ -31,10 +73,11 @@ def nearby_spots():
         result.append(spot.brief())
     return jsonify(result)
 
-@server.route('/login', methods = ['GET', 'POST'])
+
+@server.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
-        return '''<form method="POST" action="/login"><button>LOGIN</button><input value=%s name="next"/></form>'''%request.args.get('next','/')
+        return '''<form method="POST" action="/login"><button>LOGIN</button><input value=%s name="next"/></form>''' % request.args.get('next', '/')
     else:
         r = make_response(redirect(request.form.get('next')))
         r.set_cookie('sessionToken', '233666', max_age=3600*24*32)
@@ -42,4 +85,5 @@ def login():
 
 
 if __name__ == '__main__':
-    server.run(host='0.0.0.0', debug = DEBUG, port=80)
+    # generate(300)
+    server.run(host='0.0.0.0', debug=DEBUG, port=80)

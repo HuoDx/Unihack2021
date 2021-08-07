@@ -19,7 +19,7 @@ def generate(rounds):
             places[x][0],
             '希望能给需要的人一些帮助.',
             '%s'%(15001136059 + random.randint(-90000,99999)),
-            int(time.time() + random.randint(-1000,1000))
+            int(time.time()*1e3)
         )._insert()
 
 places = [

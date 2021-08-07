@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>活点地图</title>
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="Description" content="活点地图 - 实时显示附近的资源">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css" />
+    <script type="text/javascript" src="https://api.map.baidu.com/api?type=webgl&v=1.0&ak={{access_key}}"></script>
+    <script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&ak={{access_key}}"></script>
+</head>
+
+<body>
+    <div class="mdui-container mdui-typo">
+        <h1 class="mdui-typo-display2">注册成为资源场所</h1>
+        <form action="/editor" method="POST">
+            <div
+                style="display: flex; flex-direction: row; align-items: center; margin-top: 24px; margin-bottom: 24px;">
+                <div style="margin-right: 16px;" class="mdui-typo-body">图标 </div>
+                <div class="mdui-tab" mdui-tab>
+                    <a href="#logo-tab1" class="mdui-ripple">饮用水</a>
+                    <a href="#logo-tab2" class="mdui-ripple">食物</a>
+                    <a href="#logo-tab3" class="mdui-ripple">留宿</a>
+                </div>
+
+                <div class="mdui-toolbar-spacer"></div>
+                <div id="logo-tab1">
+                    <img src="/static/drink.svg" width="64px" height="64px" />
+                    <input style="display: none;" name="logo-option" value="drink" />
+                </div>
+                <div id="logo-tab2">
+                    <img src="/static/food.svg" width="64px" height="64px" />
+                    <input style="display: none;" name="logo-option" value="food" />
+                </div>
+                <div id="logo-tab3">
+                    <img src="/static/shelter.svg" width="64px" height="64px" />
+                    <input style="display: none;" name="logo-option" value="shelter" />
+                </div>
+
+
+            </div>
+            <div class="mdui-textfield mdui-textfield-floating-label">
+                <label class="mdui-textfield-label">可以提供的资源</label>
+                <input name="title" class="mdui-textfield-input" type="text" />
+            </div>
+            <div style="display: flex; flex-direction: row; align-items: center;">
+
+                <div class="mdui-textfield mdui-textfield-floating-label" style="flex-grow: 1;">
+                    <label class="mdui-textfield-label">地址</label>
+                    <input id="location-display" class="mdui-textfield-input" type="text" value="点击右侧按钮以获取地址" readonly />
+                    <input style="display: none;" id="lng" name="lng" value="" />
+                    <input style="display: none;" id="lat" name="lat" value="" />
+                </div>
+                <button id="locate-button" class="mdui-btn mdui-btn-raised" type="button"
+                    style="margin-left: 16px; background-color: black; color: white;">定位</button>
+            </div>
+            <div class="mdui-textfield mdui-textfield-floating-label">
+                <label class="mdui-textfield-label">详细地址</label>
+                <input name="location-description" class="mdui-textfield-input" type="text" />
+            </div>
+            <div class="mdui-textfield mdui-textfield-floating-label">
+                <label class="mdui-textfield-label">可容纳人数</label>
+                <input name="capacity" class="mdui-textfield-input" type="number" min="1" />
+            </div>
+            <div class="mdui-textfield mdui-textfield-floating-label">
+                <label class="mdui-textfield-label">场所简介</label>
+                <textarea name="description" class="mdui-textfield-input"></textarea>
+            </div>
+            <div class="mdui-textfield mdui-textfield-floating-label">
+                <label class="mdui-textfield-label">联系方式</label>
+                <input name="contact" class="mdui-textfield-input" type="tel" minlength="11" />
+            </div>
+            <input class="mdui-btn mdui-btn-raised mdui-ripple" style="margin-top: 24px; margin-bottom: 24px; background-color: black; color: white;" type="submit" value="提交" />
+        </form>
+    </div>
+    <div style="display: none;" id="container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
+        integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
+        crossorigin="anonymous"></script>
+    <script>
+        var $ = (selector) => document.querySelector(selector)
+        var geolocation = new BMap.Geolocation();
+        var myGeo = new BMap.Geocoder({ extensions_town: true });
+
+
+        async function decode(point) {
+            return new Promise((resolve, reject) => {
+                myGeo.getLocation(point, function (result) {
+                    if (result) {
+                        resolve(result.address)
+                    } else {
+                        reject(result)
+                    }
+                })
+            })
+        }
+        async function locate() {
+            return new Promise((resolve, reject) => {
+                geolocation.getCurrentPosition(
+                    function (r) {
+                        if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+                            console.log('您的位置：' + r.point.lng + ',' + r.point.lat);
+                            resolve(r)
+                        }
+                        else {
+                            let errorMessage = this.getStatus()
+                            console.error('failed' + errorMessage)
+                            reject(errorMessage)
+                        }
+                    }
+                )
+            })
+        }
+        $('#locate-button').addEventListener('click', async()=> {
+            let location = await locate()
+            $('#lng').value = location.point.lng
+            $('#lat').value = location.point.lat
+            $('#location-display').value = await decode(location.point)
+        })
+    </script>
+</body>

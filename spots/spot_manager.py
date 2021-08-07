@@ -13,6 +13,8 @@ with connect_to_database() as connection:
     
 def get_spot(uid):
     global spots
+    if spots is None:
+        return None
     for spot in spots:
         if spot._uid == uid:
             return spot

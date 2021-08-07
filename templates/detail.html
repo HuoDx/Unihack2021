@@ -13,9 +13,16 @@
 
 <body>
     <div class="mdui-container mdui-typo">
-        <div style="display: flex; flex-direction: row; align-items: center; margin-top: 24px;">
+        <div style="display: flex; flex-direction: row; align-items: center; margin-top: 24px; margin-bottom: 24px;">
             <img src="{{spot.logo}}" width="64px" height="64px" />
             <div class="mdui-typo-headline">{{spot.title}}</div>
+            <div class="mdui-toolbar-spacer"></div>
+            {% if reserved %}
+            <a href="/cancel-reservation" class="mdui-btn mdui-btn-raised" style="background-color: black; color: white;">取消预约</a>
+            <button id="reservation-button" class="mdui-btn mdui-btn-raised" style="margin-left: 16px; background-color: black; color: white;">我已抵达</button>
+            {% else %}
+            <button id="reservation-button" class="mdui-btn mdui-btn-raised" style="background-color: black; color: white;">预约</button>
+            {% endif %}
         </div>
         <div class="mdui-panel" mdui-panel>
 
@@ -25,7 +32,8 @@
                     <ul class="mdui-list">
                         <li class="mdui-list-item mdui-ripple">
                             <i class="mdui-list-item-icon mdui-icon material-icons">my_location</i>
-                            <div class="mdui-list-item-content" id="location-description">{{spot.location_description}}</div>
+                            <div class="mdui-list-item-content" id="location-description">{{spot.location_description}}
+                            </div>
                         </li>
                         <li class="mdui-list-item mdui-ripple">
                             <i class="mdui-list-item-icon mdui-icon material-icons">date_range</i>
@@ -45,7 +53,7 @@
                         </li>
                         <li class="mdui-list-item mdui-ripple">
                             <i class="mdui-list-item-icon mdui-icon material-icons">contact_phone</i>
-                            <div class="mdui-list-item-content">需要帮助请致电 {{spot.contact_number}} </div>
+                            <div class="mdui-list-item-content">需要帮助请致电 <a href="tel:{{spot.contact_number}}">{{spot.contact_number}} </a> </div>
                         </li>
                     </ul>
                 </div>
@@ -66,6 +74,28 @@
 
 
     </div>
+
+    <div class="mdui-dialog" id="reservation">
+        <form action="/spots/{{spot._uid}}" method="POST">
+            <div class="mdui-dialog-content">
+                <div class="mdui-dialog-title">预约</div>
+                <div class="mdui-textfield mdui-textfield-floating-label">
+                    <label class="mdui-textfield-label">您的名字</label>
+                    <input name="name" class="mdui-textfield-input" type="text" minlength="2" required/>
+                </div>
+                <div class="mdui-textfield mdui-textfield-floating-label">
+                    <label class="mdui-textfield-label">手机号</label>
+                    <input name="contact" class="mdui-textfield-input" type="tel" minlength="11" required/>
+                </div>
+                <div>继续操作代表您知道您的联系方式将被目标站点的人知晓, 用于联系您.</div>
+            </div>
+            
+            <div class="mdui-dialog-actions">
+                <input class="mdui-btn mdui-ripple" type="submit" value="完成预约"/>
+            </div>
+        </form>
+    </div>
+
     <div style="display: none;" id="container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
@@ -75,9 +105,18 @@
         var route = []
         var $ = (selector) => document.querySelector(selector)
         var timestamp = parseInt('{{spot.created_at}}')
+
         console.log(timestamp)
-        var date = Date(timestamp)
+        var date = new Date(timestamp)
         $('#date').innerText = date
+
+
+        var dialogBox = new mdui.Dialog('#reservation')
+        dialogBox.close()
+        $('#reservation-button').addEventListener('click', function(e){
+            dialogBox.open()
+        })
+
         var geolocation = new BMap.Geolocation();
 
         async function locate() {
@@ -114,7 +153,7 @@
                     var output = ''
 
                     output += `共${plan.getDistance(true)}, `;  //获取距离
-                    output += `预计需要 ${plan.getDuration(true)} 抵达`;  //获取时间
+                    output += `预计需要${plan.getDuration(true)}抵达`;  //获取时间
                     $('#travel-info').innerText = output
                     console.log(output)
                     for (let point of plan.Wh[0].Tr) {
@@ -125,7 +164,7 @@
                 }
             });
 
-            
+
 
             lat = parseFloat('{{ spot.lat }}')
             lng = parseFloat('{{ spot.lng }}')
