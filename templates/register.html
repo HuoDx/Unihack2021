@@ -11,20 +11,23 @@
 
 <body>
     <div class="mdui-container mdui-typo">
-        <h1 class="mdui-typo-display2">登录账号</h1>
-        <form action="/login" method="POST">
-            <div class="mdui-textfield mdui-textfield-floating-label">
+        <h1 class="mdui-typo-display2">注册账号</h1>
+        <form action="/register" method="POST">
+            <div class="mdui-textfield mdui-textfield-floating-label" >
                 <label class="mdui-textfield-label">电子邮箱</label>
-                <input name="email" class="mdui-textfield-input" type="email" />
+                <input name="email" class="mdui-textfield-input" type="email" required/>
+            </div>
+            <div class="mdui-textfield mdui-textfield-floating-label">
+                <label class="mdui-textfield-label">您的姓名</label>
+                <input name="name" class="mdui-textfield-input" type="text"  required/>
             </div>
             <div class="mdui-textfield mdui-textfield-floating-label">
                 <label class="mdui-textfield-label">密码</label>
-                <input name="password" class="mdui-textfield-input" type="password" />
+                <input name="password" class="mdui-textfield-input" type="password" required/>
             </div>
-            <div>还没有账号? 去<a href="/register?next={{next}}">注册</a></div>
+            <div>已经有账号了? 去<a href="/login?next={{next}}">登录</a></div>
             <input style="display: none;" name="next" value="{{next}}" />
-            <button class="mdui-btn mdui-btn-raised"
-                style="margin-top: 24px; margin-bottom: 24px; background-color: black; color: white;">登录</button>
+            <button class="mdui-btn mdui-btn-raised" style="margin-top: 24px; margin-bottom: 24px; background-color: black; color: white;" >注册</button>
         </form>
     </div>
 
@@ -32,12 +35,6 @@
         integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
         crossorigin="anonymous"></script>
     <script>
-        // get all args
-        // var args = {}
-        // for (group of unescape(window.location.href).split('?')[1].split('&')) {
-        //     terms = group.split('=')
-        //     args[terms[0]] = terms[1]
-        // }
-        // console.log(args)
+
     </script>
 </body>

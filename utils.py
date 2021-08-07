@@ -2,10 +2,12 @@ import math
 from functools import wraps
 
 from flask import request, redirect
+from flask.helpers import make_response
 import psycopg2
 from geopy.distance import geodesic
 
 from config import DatabaseConfig
+from session_manager import get_uid
 
 def login_required(func):
     @wraps(func)
@@ -13,10 +15,13 @@ def login_required(func):
         token = request.cookies.get('sessionToken', None)
         if token is None:
             return redirect('/login?next=%s' % request.url)
+        if get_uid(token) is None:
+            r = make_response(redirect('/login?next=%s' % request.url))
+            r.set_cookie('sesstionToken', '')
+            return r
         return func(token, *args, **kwargs)
     return wrapper
 
-RADIUS = 6378137
 def distance_between(point1, point2) -> float:
     global RADIUS
     '''

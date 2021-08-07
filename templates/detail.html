@@ -7,6 +7,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="Description" content="活点地图 - 实时显示附近的资源">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css" />
+    <style>
+        .map-container {
+            width: 400px; 
+            height: 300px; 
+            margin-right: 24px;
+        }
+        .map-wrapper {
+            display: flex; 
+            flex-direction: row;
+        }
+        .mdui-panel-item-open {
+            padding-bottom: 8px;
+        }
+        @media(max-width: 500px) {
+            .map-container {
+                width: 300px; 
+                height: 200px; 
+                margin-right: 24px;
+            }
+            .map-wrapper {
+                flex-direction: column;
+            }
+        }
+    </style>
     <script type="text/javascript" src="https://api.map.baidu.com/api?type=webgl&v=1.0&ak={{access_key}}"></script>
     <script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&ak={{access_key}}"></script>
 </head>
@@ -18,10 +42,13 @@
             <div class="mdui-typo-headline">{{spot.title}}</div>
             <div class="mdui-toolbar-spacer"></div>
             {% if reserved %}
-            <a href="/cancel-reservation" class="mdui-btn mdui-btn-raised" style="background-color: black; color: white;">取消预约</a>
-            <button id="reservation-button" class="mdui-btn mdui-btn-raised" style="margin-left: 16px; background-color: black; color: white;">我已抵达</button>
+            <a href="/cancel-reservation" class="mdui-btn mdui-btn-raised"
+                style="background-color: black; color: white;">取消预约</a>
+            <button id="reservation-button" class="mdui-btn mdui-btn-raised"
+                style="margin-left: 16px; background-color: black; color: white;">我已抵达</button>
             {% else %}
-            <button id="reservation-button" class="mdui-btn mdui-btn-raised" style="background-color: black; color: white;">预约</button>
+            <button id="reservation-button" class="mdui-btn mdui-btn-raised"
+                style="background-color: black; color: white;">预约</button>
             {% endif %}
         </div>
         <div class="mdui-panel" mdui-panel>
@@ -53,7 +80,8 @@
                         </li>
                         <li class="mdui-list-item mdui-ripple">
                             <i class="mdui-list-item-icon mdui-icon material-icons">contact_phone</i>
-                            <div class="mdui-list-item-content">需要帮助请致电 <a href="tel:{{spot.contact_number}}">{{spot.contact_number}} </a> </div>
+                            <div class="mdui-list-item-content">需要帮助请致电 <a
+                                    href="tel:{{spot.contact_number}}">{{spot.contact_number}} </a> </div>
                         </li>
                     </ul>
                 </div>
@@ -66,7 +94,8 @@
             </div>
             <div class="mdui-panel-item">
                 <div class="mdui-panel-item-header">路线</div>
-                <div class="mdui-panel-item-body">
+                <div class="mdui-panel-item-body map-wrapper">
+                    <div class="map-container" id="container"></div>
                     <div id="route"></div>
                 </div>
             </div>
@@ -81,22 +110,22 @@
                 <div class="mdui-dialog-title">预约</div>
                 <div class="mdui-textfield mdui-textfield-floating-label">
                     <label class="mdui-textfield-label">您的名字</label>
-                    <input name="name" class="mdui-textfield-input" type="text" minlength="2" required/>
+                    <input name="name" class="mdui-textfield-input" type="text" minlength="2" required />
                 </div>
                 <div class="mdui-textfield mdui-textfield-floating-label">
                     <label class="mdui-textfield-label">手机号</label>
-                    <input name="contact" class="mdui-textfield-input" type="tel" minlength="11" required/>
+                    <input name="contact" class="mdui-textfield-input" type="tel" minlength="11" required />
                 </div>
                 <div>继续操作代表您知道您的联系方式将被目标站点的人知晓, 用于联系您.</div>
             </div>
-            
+
             <div class="mdui-dialog-actions">
-                <input class="mdui-btn mdui-ripple" type="submit" value="完成预约"/>
+                <input class="mdui-btn mdui-ripple" type="submit" value="完成预约" />
             </div>
         </form>
     </div>
 
-    <div style="display: none;" id="container"></div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
         integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
@@ -113,7 +142,7 @@
 
         var dialogBox = new mdui.Dialog('#reservation')
         dialogBox.close()
-        $('#reservation-button').addEventListener('click', function(e){
+        $('#reservation-button').addEventListener('click', function (e) {
             dialogBox.open()
         })
 
@@ -141,7 +170,7 @@
             let location = await locate()
             map.centerAndZoom(location.point, 20);
             var walking = new BMap.WalkingRoute(map, {
-                renderOptions: { autoViewport: false },
+                renderOptions: { map: map, autoViewport: true },
                 onSearchComplete: function (results) {
                     console.log('Done.')
                     if (walking.getStatus() != BMAP_STATUS_SUCCESS) {
@@ -165,6 +194,8 @@
             });
 
 
+            map.enableScrollWheelZoom(true);
+            map.centerAndZoom(location.point, 20);
 
             lat = parseFloat('{{ spot.lat }}')
             lng = parseFloat('{{ spot.lng }}')
@@ -176,6 +207,31 @@
                     $('#location-description').innerText = `${result.address}\n${$('#location-description').innerText}`
                 }
             })
+            var label = new BMap.Label('起点', {       
+                position: location.point,                         
+                         
+            })
+            label.setStyle({                             
+                color: '#000',
+                border: 'none',
+                justifySelf: 'center'
+            })
+            map.addOverlay(label)
+
+            var label2 = new BMap.Label('终点', {      
+                position: new BMap.Point(lng, lat),                               
+            })
+            label2.setStyle({                           
+                color: '#000',
+                border: 'none',
+                justifySelf: 'center'
+            })
+            map.addOverlay(label2)
+            var start = new BMap.Marker(location.point)
+            var end = new BMap.Marker(new BMap.Point(lng, lat))
+            map.addOverlay(start)
+            map.addOverlay(end)
+            
         })()
     </script>
 </body>
