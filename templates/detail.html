@@ -142,9 +142,10 @@
 
         var dialogBox = new mdui.Dialog('#reservation')
         dialogBox.close()
-        $('#reservation-button').addEventListener('click', function (e) {
-            dialogBox.open()
-        })
+        if($('#reservation-button') !== null)
+            $('#reservation-button').addEventListener('click', function (e) {
+                dialogBox.open()
+            })
 
         var geolocation = new BMap.Geolocation();
 

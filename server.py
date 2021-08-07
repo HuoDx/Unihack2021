@@ -10,7 +10,7 @@ from flask.helpers import make_response
 from werkzeug.utils import redirect
 
 from config import DEBUG, AK
-from utils import login_required, connect_to_database
+from utils import distance_between, login_required, connect_to_database
 from spots import spot_manager
 from spots.spot import Spot
 import session_manager
@@ -25,6 +25,11 @@ if DEBUG:
 
 @server.route('/')
 def index():
+    return render_template('welcome.html')
+
+
+@server.route('/map')
+def map_index():
     r = request.cookies.get('reserved')
     if r is not None and spot_manager.get_spot(r) is not None:
         return redirect('/spots/%s' % r)
@@ -39,10 +44,11 @@ def cancel_reservation():
     if r is not None:
         spot = spot_manager.get_spot(r)
         spot.set_registered(spot.registered - 1)
-        resp = make_response(redirect('/'))
+        resp = make_response(redirect('/map'))
         resp.set_cookie('reserved', '')
         return resp
-    return redirect('/')
+    return redirect('/map')
+
 
 @server.route('/arrive')
 def arrive():
@@ -52,21 +58,24 @@ def arrive():
         resp = make_response(render_template('arrived.html'))
         resp.set_cookie('reserved', '')
         return resp
-    return redirect('/')
+    return redirect('/map')
+
 
 @server.route('/panel/<spot_uid>')
 @login_required
 def panel(token, spot_uid):
     if spot_manager.get_spot(spot_uid).owner != session_manager.get_uid(token):
-        return redirect('/')
+        return redirect('/map')
     data = []
     with connect_to_database() as connection:
         cursor = connection.cursor()
-        cursor.execute('SELECT * FROM reservations WHERE spot_uid=%s',(spot_uid,))
+        cursor.execute(
+            'SELECT * FROM reservations WHERE spot_uid=%s', (spot_uid,))
         results = cursor.fetchall()
         for result in results:
             data.append({'name': result[0], 'contact': result[1]})
-    return render_template('panel.html', data = data)
+    return render_template('panel.html', data=data)
+
 
 @server.route('/editor', methods=['GET', 'POST'])
 @login_required
@@ -92,7 +101,7 @@ def editor(token):
             capacity,
             0,
             title,
-            '/static/%s.svg'%logo_option,
+            '/static/%s.svg' % logo_option,
             description,
             contact,
             int(time.time()*1e3)
@@ -101,6 +110,44 @@ def editor(token):
         s._insert()
         return render_template('editor.html', access_key=AK)
 
+
+def reserve(uid, name, phone):
+    with connect_to_database() as connection:
+            cursor = connection.cursor()
+            cursor.execute('INSERT INTO reservations VALUES(%s,%s,%s);', (
+                name,
+                phone,
+                uid
+            ))
+    spot = spot_manager.get_spot(uid)
+    spot.set_registered(spot.registered + 1)
+
+@server.route('/automatch', methods=['GET', 'POST'])
+def automatch():
+    r = request.cookies.get('reserved')
+    if r is not None and spot_manager.get_spot(r) is not None:
+        return redirect('/spots/%s' % r)
+
+    if request.method == 'GET':
+        return render_template('automatch.html', access_key=AK)
+    else:
+        name = request.form.get('name', '群众')
+        phone = request.form.get('contact', '无信息')
+        lat = request.form.get('lat')
+        lng = request.form.get('lng')
+        logo_option = request.form.get('logo-option')
+        target = []
+        for spot in spot_manager.spots:
+            if logo_option in spot.logo:
+                target.append((distance_between((lng, lat), (spot.lng, spot.lat)), spot._uid))
+        s = sorted(target, key=lambda d: d[0])
+        print(s[0])
+        uid = s[0][1]
+        reserve(uid, name, phone)
+        response = make_response(render_template(
+            'detail.html', spot=spot_manager.get_spot(uid), access_key=AK, reserved=True))
+        response.set_cookie('reserved', uid, max_age=3600*24*3)
+        return response
 
 @server.route('/spots/<uid>', methods=['GET', 'POST'])
 def detail(uid):
@@ -111,15 +158,7 @@ def detail(uid):
         name = request.form.get('name', '群众')
         phone = request.form.get('contact', '无信息')
         # TODO: do something
-        with connect_to_database() as connection:
-            cursor = connection.cursor()
-            cursor.execute('INSERT INTO reservations VALUES(%s,%s,%s);',(
-                name,
-                phone,
-                uid
-            ))
-        spot = spot_manager.get_spot(uid)
-        spot.set_registered(spot.registered + 1)
+        reserve(uid, name, phone)
         response = make_response(render_template(
             'detail.html', spot=spot_manager.get_spot(uid), access_key=AK, reserved=True))
         response.set_cookie('reserved', uid, max_age=3600*24*3)
@@ -139,7 +178,7 @@ def nearby_spots():
 @server.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
-        return render_template('login.html', next = request.args.get('next', '/'))
+        return render_template('login.html', next = request.args.get('next', '/map'))
     else:
         password = request.form.get('password')
         email = request.form.get('email')
@@ -161,7 +200,7 @@ def login():
 @server.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
-        return render_template('register.html', next = request.args.get('next', '/'))
+        return render_template('register.html', next = request.args.get('next', '/map'))
     else:
         name = request.form.get('name')
         password = request.form.get('password')

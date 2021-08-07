@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>活点地图</title>
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="Description" content="活点地图 - 实时显示附近的资源">
+    <style>
+        .image {
+            background-image: url('/static/lighthouse.png');
+            background-size: cover;
+            border-radius: 50%;
+            width: 256px;
+            height: 256px;
+        }
+
+        .container {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            margin-top: 36px;
+        }
+
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css" />
+</head>
+
+<body>
+    <div class="mdui-container mdui-typo container">
+        <h1 class="mdui-typo-display2">欢迎使用活点地图</h1>
+        <a href="/automatch" class="mdui-btn mdui-btn-raised" style="margin-top: 24px; color:black;">自动预约最近的资源 / 救助点</a>
+        <a href="/map" class="mdui-btn mdui-btn-raised" style="margin-top: 24px;  color:black;">我想看看附近有什么</a>
+        <a href="/editor" class="mdui-btn mdui-btn-raised" style="margin-top: 24px;  color:black;">我想提供资源/救助站点</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
+        integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
+        crossorigin="anonymous"></script>
+</body>
