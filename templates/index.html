@@ -71,7 +71,8 @@
         (async () => {
             var map = new BMap.Map('map-view');
 
-            var location = await locate()
+            var location = {}
+            location.point = new BMap.Point(116.402759,40.016628)
             map.enableScrollWheelZoom(true);
             map.centerAndZoom(location.point, 20);
             var mk = new BMap.Marker(location.point);

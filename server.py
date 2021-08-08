@@ -87,7 +87,7 @@ def editor(token):
         title = request.form.get('title')
         lng = request.form.get('lng')
         lat = request.form.get('lat')
-        location_description = request.form.get('location_description')
+        location_description = request.form.get('location-description')
         capacity = request.form.get('capacity')
         description = request.form.get('description')
         contact = request.form.get('contact')
@@ -106,7 +106,7 @@ def editor(token):
             contact,
             int(time.time()*1e3)
         )
-        spot_manager.spots.append(s)
+        spot_manager.add_spot(s)
         s._insert()
         return render_template('editor.html', access_key=AK)
 

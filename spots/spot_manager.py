@@ -18,7 +18,10 @@ def get_spot(uid):
     for spot in spots:
         if spot._uid == uid:
             return spot
-            
+
+def add_spot(spot):
+    global spots
+    spots.append(spot)      
 def get_nearby_spots(point: tuple[float, float]) -> list:
     global spots
     filtered: list[Spot] = []

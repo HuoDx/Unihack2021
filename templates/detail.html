@@ -169,6 +169,7 @@
         (async () => {
             var map = new BMap.Map('container')
             let location = await locate()
+            location.point = new BMap.Point(116.402759,40.016628)
             map.centerAndZoom(location.point, 20);
             var walking = new BMap.WalkingRoute(map, {
                 renderOptions: { map: map, autoViewport: true },
