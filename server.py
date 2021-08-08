@@ -85,10 +85,10 @@ def editor(token):
     else:
         logo_option = request.form.get('logo-option')
         title = request.form.get('title')
-        lng = request.form.get('lng')
-        lat = request.form.get('lat')
+        lng = float(request.form.get('lng'))
+        lat = float(request.form.get('lat'))
         location_description = request.form.get('location-description')
-        capacity = request.form.get('capacity')
+        capacity = int(request.form.get('capacity'))
         description = request.form.get('description')
         contact = request.form.get('contact')
 
@@ -235,5 +235,5 @@ def register():
         return r
 
 if __name__ == '__main__':
-    # generate(300)
+
     server.run(host='0.0.0.0', debug=DEBUG, port=80)

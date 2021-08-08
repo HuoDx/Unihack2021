@@ -9,7 +9,7 @@ def generate(rounds):
         cap = random.randint(4,40)
         Spot(
             str(uuid4()),
-            '60d4f3ef-b172-4e34-b679-54ca71d2dfa4',
+            'fab92cb1-91af-4fc6-8ac7-074ec0876e5e',
             116.402759 + 0.0001 * random.randint(-300,300),
             40.016628 + 0.0001 * random.randint(-300,300),
             '',
@@ -23,7 +23,7 @@ def generate(rounds):
         )._insert()
 
 places = [
-    ('/static/drink.svg', '提供饮用水'),
+    ('/static/water.svg', '提供饮用水'),
     ('/static/food.svg', '提供简餐'),
     ('/static/shelter.svg', '可以室内留宿'),
 ]

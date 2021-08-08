@@ -94,6 +94,7 @@
         }
         $('#locate-button').addEventListener('click', async () => {
             let location = await locate()
+            location.point = new BMap.Point(116.402759,40.016628)
             $('#lng').value = location.point.lng
             $('#lat').value = location.point.lat
             $('#location-display').value = await decode(location.point)

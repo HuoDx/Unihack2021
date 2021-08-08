@@ -59,7 +59,9 @@
                     <ul class="mdui-list">
                         <li class="mdui-list-item mdui-ripple">
                             <i class="mdui-list-item-icon mdui-icon material-icons">my_location</i>
+                            {% if spot.location_description != None %}
                             <div class="mdui-list-item-content" id="location-description">{{spot.location_description}}
+                            {% endif %}
                             </div>
                         </li>
                         <li class="mdui-list-item mdui-ripple">
